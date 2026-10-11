@@ -35,12 +35,12 @@ export default function Home() {
           </h1>
 
           <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto">
-            Transform robotic, repetitive, or awkward text into natural, context-appropriate communication. Backed by <strong className="text-navy-900 font-semibold">Truth Guard</strong> to ensure every number, metric, and original meaning stays 100% accurate.
+            Refine stiff, robotic, or overly repetitive drafts into natural, engaging prose tailored to your audience. Integrated with <strong className="text-navy-900 font-semibold">Truth Guard</strong> dual-layer inspection to verify numbers, dates, technical terms, and core meaning.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2 text-xs text-slate-500 font-medium">
             <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" /> Zero Hallucination Guarantee
+              <ShieldCheck className="w-4 h-4 text-emerald-600" /> Meaning Preservation Checks
             </span>
             <span>•</span>
             <span className="flex items-center gap-1.5">

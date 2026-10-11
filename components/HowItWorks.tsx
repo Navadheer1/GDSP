@@ -7,30 +7,30 @@ export default function HowItWorks() {
   const steps = [
     {
       step: '01',
-      title: 'Context & Tone Alignment',
+      title: 'Context and Tone Analysis',
       description:
-        'Select your audience persona—from constructive recruiter feedback to executive reports—ensuring appropriate vocabulary and phrasing.',
+        'Analyzes your selected audience persona and tone requirements to guide vocabulary, structure, and phrasing without altering underlying intent.',
       icon: Cpu,
     },
     {
       step: '02',
-      title: 'Gemini Natural Language Synthesis',
+      title: 'AI-Powered Rewriting',
       description:
-        'Google Gemini reformulates stiff phrasing into dynamic human rhythm, eliminating corporate buzzwords, excessive hedging, and robotic clichés.',
+        'Gemini models rephrase robotic patterns, clichés, and passive sentences into natural, human cadence while retaining original facts.',
       icon: Sparkles,
     },
     {
       step: '03',
-      title: 'Deterministic Verification',
+      title: 'Deterministic Fact Checks',
       description:
-        'Truth Guard scans every number, percentage, date, and proper noun to strictly guarantee zero factual drift from your original text.',
+        'Pattern-based checks compare original and rewritten text for numbers, percentages, currency, dates, and named entities to flag changes.',
       icon: ShieldCheck,
     },
     {
       step: '04',
-      title: 'AI Semantic Audit',
+      title: 'Independent Semantic Verification',
       description:
-        'A secondary independent semantic pass verifies that the core meaning, uncertainty levels, and original claims remain 100% intact.',
+        'A secondary AI audit checks that core meaning, caveats, and epistemic uncertainty remain preserved without unsupported claims.',
       icon: RefreshCw,
     },
   ];
@@ -40,10 +40,10 @@ export default function HowItWorks() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-10">
           <h2 className="text-xl sm:text-2xl font-bold text-navy-900 tracking-tight">
-            How Truth Guard Ensures Absolute Accuracy
+            How Truth Guard Checks Your Text
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 mt-2">
-            The only text humanizer engineered with verifiable factual safeguards and zero meaning loss.
+            Designed to preserve facts and meaning by pairing deterministic guardrails with AI semantic inspection.
           </p>
         </div>
 

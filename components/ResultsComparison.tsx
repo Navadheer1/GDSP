@@ -12,6 +12,9 @@ import {
   FileText,
   BookmarkPlus,
   Loader2,
+  ShieldAlert,
+  Eye,
+  Sliders,
 } from 'lucide-react';
 import { useAuth } from '@/lib/firebase/authContext';
 import { saveRewriteHistory } from '@/lib/firebase/history';
@@ -19,22 +22,61 @@ import { saveRewriteHistory } from '@/lib/firebase/history';
 interface ResultsComparisonProps {
   result: HumanizeResponse;
   onRetry: () => void;
+  onSaferRewrite?: () => void;
   onSaved?: () => void;
   isRetrying?: boolean;
+}
+
+/**
+ * Lightweight tokenized diff highlight between original and rewritten text
+ */
+function renderHighlightedDiff(original: string, rewritten: string) {
+  const origTokens = new Set(
+    original
+      .toLowerCase()
+      .split(/[\s,.;:!?()]+/)
+      .filter((t) => t.length > 2)
+  );
+
+  const rewrTokens = rewritten.split(/(\s+)/);
+
+  return rewrTokens.map((chunk, idx) => {
+    const cleanChunk = chunk.toLowerCase().replace(/[^a-z0-9$%]/g, '');
+    if (!cleanChunk || cleanChunk.length <= 2) {
+      return <span key={idx}>{chunk}</span>;
+    }
+
+    const isNew = !origTokens.has(cleanChunk);
+    if (isNew) {
+      return (
+        <span
+          key={idx}
+          className="bg-brand-50 text-brand-900 border-b-2 border-brand-300 font-semibold px-0.5 rounded-xs"
+        >
+          {chunk}
+        </span>
+      );
+    }
+    return <span key={idx}>{chunk}</span>;
+  });
 }
 
 export default function ResultsComparison({
   result,
   onRetry,
+  onSaferRewrite,
   onSaved,
   isRetrying,
 }: ResultsComparisonProps) {
   const { user } = useAuth();
   const [copiedOriginal, setCopiedOriginal] = useState(false);
   const [copiedHumanized, setCopiedHumanized] = useState(false);
+  const [showDiff, setShowDiff] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  const hasIssues = !result.truthGuard.passed || result.truthGuard.status !== 'verified';
 
   const copyToClipboard = async (text: string, isOriginal: boolean) => {
     try {
@@ -83,6 +125,41 @@ export default function ResultsComparison({
 
   return (
     <div className="space-y-4">
+      {/* Verification Warning / Action Banner if issues found */}
+      {hasIssues && (
+        <div className="p-4 bg-amber-50/90 border border-amber-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-900 shadow-xs">
+          <div className="flex items-start gap-2.5">
+            <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <strong className="font-semibold block text-amber-950">
+                Factual or Meaning Discrepancy Flagged
+              </strong>
+              <span className="text-amber-800 leading-relaxed">
+                {result.truthGuard.summary}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {onSaferRewrite && (
+              <button
+                type="button"
+                onClick={onSaferRewrite}
+                disabled={isRetrying}
+                className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-semibold transition flex items-center gap-1.5 shadow-xs"
+              >
+                {isRetrying ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Sliders className="w-3.5 h-3.5" />
+                )}
+                <span>Try Safer Rewrite</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Metrics Header Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm text-xs text-slate-600">
         <div className="flex items-center gap-4">
@@ -116,11 +193,26 @@ export default function ResultsComparison({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Toggle Diff Highlighting */}
+          <button
+            type="button"
+            onClick={() => setShowDiff(!showDiff)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition ${
+              showDiff
+                ? 'bg-brand-50 border-brand-300 text-brand-700'
+                : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
+            }`}
+          >
+            <Eye className="w-3.5 h-3.5 text-brand-600" />
+            <span>{showDiff ? 'Showing Changes' : 'Highlight Changes'}</span>
+          </button>
+
           {/* Save to History Button */}
           <button
+            type="button"
             onClick={handleSaveToHistory}
             disabled={saving || saveSuccess}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 transition ${
               saveSuccess
                 ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
                 : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
@@ -136,14 +228,16 @@ export default function ResultsComparison({
             <span>{saveSuccess ? 'Saved!' : 'Save to History'}</span>
           </button>
 
-          {/* Retry Button */}
+          {/* Try Again / Retry Button */}
           <button
+            type="button"
             onClick={onRetry}
             disabled={isRetrying}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 transition disabled:opacity-50"
+            title="Generate a fresh rewrite"
           >
             <RotateCcw className={`w-3.5 h-3.5 text-slate-500 ${isRetrying ? 'animate-spin' : ''}`} />
-            <span>Retry</span>
+            <span>{isRetrying ? 'Retrying...' : 'Try Again'}</span>
           </button>
         </div>
       </div>
@@ -216,7 +310,9 @@ export default function ResultsComparison({
             </button>
           </div>
           <div className="p-4 flex-1 whitespace-pre-wrap text-sm text-navy-900 font-medium leading-relaxed min-h-[160px] selection:bg-brand-200">
-            {result.humanizedText}
+            {showDiff
+              ? renderHighlightedDiff(result.originalText, result.humanizedText)
+              : result.humanizedText}
           </div>
         </div>
       </div>

@@ -9,8 +9,8 @@
 ## 🌟 Key Features
 
 1. **AI Text Humanization via Gemini AI**:
-   - Built on Google's official `@google/genai` SDK using `gemini-2.5-flash`.
-   - Strips corporate clichés, passive phrasing, robotic cadence, and excessive filler while preserving human warmth.
+   - Built on Google's official `@google/genai` SDK using `gemini-3.8-flash`.
+   - Strips corporate clichés, passive phrasing, robotic cadence, and excessive filler while preserving human warmth and factual fidelity.
 2. **Target Context Adaptation**:
    - Recruiter Feedback (Constructive, empathetic, clear candidate feedback)
    - Candidate Outreach (Warm, engaging, transparent recruitment outreach)
@@ -23,9 +23,10 @@
    - Polished (Crisp, elegant, dynamic)
    - Conversational (Warm, relatable, authentic)
 4. **Truth Guard Dual-Verification Engine**:
-   - **Deterministic Checks**: Real-time regex audits for exact preservation of currency tokens, percentages, decimals, calendar dates, days of the week, quarters, and proper named entities.
-   - **Semantic AI Audit**: Independent secondary Gemini pass ensuring core author intent, nuance, and uncertainty levels ("might", "possibly") remain faithful and unhallucinated.
-   - Transparent scoring (0–100%) and actionable inspection badges.
+   - **Deterministic Checks**: Real-time pattern audits examining exact preservation of numbers, percentages, decimals, calendar dates, days of the week, quarters, and proper named entities.
+   - **Semantic AI Audit**: Independent secondary Gemini 3.8 Flash audit evaluating whether core author intent, nuance, and uncertainty levels ("may have", "unverified") remain faithfully preserved.
+   - **Transparent Statuses**: Honest audit badges (`passed`, `warning`, `failed`, or `incomplete` if secondary API is unavailable) with interactive diff highlighting and one-click "Try Safer Rewrite".
+   - **Truth Guard Challenge Sample**: Quick sample to verify numerical and uncertainty fidelity live.
 5. **Firebase Authentication**:
    - Instant guest access (no login required to test).
    - Secure email/password login and registration to synchronize personal rewrite history.

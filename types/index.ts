@@ -30,14 +30,16 @@ export interface VerificationCheck {
 export interface TruthGuardResult {
   score: number; // 0 - 100
   passed: boolean;
+  status: 'verified' | 'warning' | 'failed' | 'incomplete';
   summary: string;
   deterministicChecks: VerificationCheck[];
   semanticVerification: {
-    status: 'verified' | 'caution' | 'failed';
+    status: 'verified' | 'caution' | 'failed' | 'incomplete';
     meaningPreserved: boolean;
     unsupportedClaimsFound: boolean;
     tonalShiftAppropriate: boolean;
     semanticExplanation: string;
+    issues?: string[];
   };
 }
 

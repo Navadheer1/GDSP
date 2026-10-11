@@ -35,8 +35,8 @@ Your core mission:
 IMPROVE THE WRITING WITHOUT CHANGING THE ORIGINAL MEANING.
 
 CRITICAL INVIOLABLE RULES:
-1. Preserve all factual claims, names, dates, metrics, percentages, numbers, and technical terminology.
-2. Preserve uncertainty or hedging: If the original says "might" or "possibly", NEVER assert certainty.
+1. Preserve all factual claims, names, dates, metrics, percentages, numbers, and technical terminology. Keep numeric counts and metrics intact as exact digits/tokens (e.g. keep '3' as '3', '82%' as '82%', '2 years' as '2 years').
+2. Preserve uncertainty, hedging, or lack of verification: If the original says "might", "possibly", "may have", or notes that something "has not been verified", NEVER assert certainty, never remove caveats, and never drop the unverified status.
 3. NEVER invent facts, metrics, accomplishments, or claims not present in the original.
 4. Eliminate AI telltales: banish overly repetitive transitions (e.g. "Moreover", "Furthermore", "Delve into", "Tapestry", "Testament to"), robotic passive voice, unnecessary flowery adjectives, and hollow filler.
 5. Make the cadence natural: vary sentence lengths, ensure genuine human rhythm.
@@ -70,7 +70,7 @@ You must respond ONLY with a valid JSON object matching this schema:
 }
 
 Evaluation Criteria:
-- status "verified": Original meaning and all facts are 100% faithful and preserved.
+- status "verified": Original meaning, key facts, numbers, and nuance are faithfully preserved.
 - status "caution": Minor nuance shifts or phrasing ambiguities exist, but core facts remain intact.
 - status "failed": Key numbers, entities, dates were altered, unsupported facts were invented, or certainty was reversed.`;
 

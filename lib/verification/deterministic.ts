@@ -39,11 +39,11 @@ function extractDatePatterns(text: string): string[] {
  * Extracts proper nouns / capitalized entity phrases (excluding beginning of sentence words)
  */
 function extractEntities(text: string): string[] {
-  // Matches capitalized words inside sentences (e.g. "Google", "Alice Johnson", "Kubernetes", "AWS")
-  const matches = text.match(/(?<![.!?]\s+)(?<!^)[A-Z][a-zA-Z0-9_\-\.\+]+/g);
+  // Matches mid-sentence capitalized words / acronyms without trailing punctuation
+  const matches = text.match(/(?<![.!?]\s+)(?<!^)\b[A-Z][a-zA-Z0-9_\-\+]*\b/g);
   if (!matches) return [];
   // Filter out very common conversational filler words if capitalized
-  const stopWords = new Set(['I', 'However', 'Therefore', 'Please', 'Thank', 'Thanks']);
+  const stopWords = new Set(['I', 'However', 'Therefore', 'Please', 'Thank', 'Thanks', 'The', 'This', 'That', 'These', 'Those', 'And', 'But', 'Or']);
   const filtered = matches.filter(w => !stopWords.has(w));
   return Array.from(new Set(filtered.map(w => w.trim())));
 }

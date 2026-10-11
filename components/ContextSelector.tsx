@@ -13,7 +13,7 @@ import {
 
 interface ContextSelectorProps {
   value: WritingContext;
-  onChange: (val: WritingContext) => void;
+  onChange: (value: WritingContext) => void;
   disabled?: boolean;
 }
 
@@ -71,7 +71,7 @@ export default function ContextSelector({ value, onChange, disabled }: ContextSe
         <span className="text-[11px] text-slate-400">Where this text will be used</span>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
         {CONTEXT_OPTIONS.map((item) => {
           const Icon = item.icon;
           const isSelected = value === item.id;
@@ -79,28 +79,34 @@ export default function ContextSelector({ value, onChange, disabled }: ContextSe
             <button
               key={item.id}
               type="button"
+              role="radio"
+              aria-checked={isSelected}
               disabled={disabled}
               onClick={() => onChange(item.id)}
-              className={`p-3 rounded-xl border text-left transition relative flex flex-col justify-between ${
+              className={`p-3 rounded-xl border text-left transition relative flex flex-col justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 ${
                 isSelected
-                  ? 'border-brand-500 bg-brand-50/70 text-navy-900 shadow-sm ring-1 ring-brand-500'
-                  : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-700'
-              } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  ? 'border-brand-600 bg-brand-50/90 text-navy-900 shadow-xs ring-2 ring-brand-500/30'
+                  : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80 text-slate-700'
+              } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-xs'}`}
             >
               <div>
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center justify-between mb-2">
                   <div
-                    className={`p-1.5 rounded-lg ${
-                      isSelected ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-600'
+                    className={`p-1.5 rounded-lg transition ${
+                      isSelected
+                        ? 'bg-brand-600 text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-600'
                     }`}
                   >
                     <Icon className="w-4 h-4" />
                   </div>
                   {isSelected && (
-                    <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
+                    <span className="inline-flex items-center justify-center w-2 h-2 rounded-full bg-brand-600 ring-4 ring-brand-100" />
                   )}
                 </div>
-                <div className="text-xs font-semibold leading-tight line-clamp-1">{item.label}</div>
+                <div className="text-xs font-bold leading-tight text-navy-900 line-clamp-1">
+                  {item.label}
+                </div>
               </div>
               <p className="text-[10px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">
                 {item.description}

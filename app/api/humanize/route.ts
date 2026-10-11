@@ -101,9 +101,11 @@ export async function POST(req: NextRequest) {
       unsupportedClaimsFound: false,
       tonalShiftAppropriate: true,
       semanticExplanation: 'Semantic check passed cleanly.',
+      issues: [],
     };
 
     const semanticChecksList: VerificationCheck[] = [];
+    let semanticVerificationFailedToRun = false;
 
     try {
       const { systemInstruction: verifySystem, userPrompt: verifyPrompt } =
@@ -122,13 +124,14 @@ export async function POST(req: NextRequest) {
       const parsedVerification = JSON.parse(verifyResponse.text || '{}');
 
       semanticVerification = {
-        status: parsedVerification.status || (parsedVerification.meaningPreserved ? 'verified' : 'caution'),
+        status: parsedVerification.status || (parsedVerification.meaningPreserved === false ? 'failed' : 'verified'),
         meaningPreserved: parsedVerification.meaningPreserved ?? true,
         unsupportedClaimsFound: parsedVerification.unsupportedClaimsFound ?? false,
         tonalShiftAppropriate: parsedVerification.tonalShiftAppropriate ?? true,
         semanticExplanation:
           parsedVerification.explanation ||
-          'AI verified that meaning and core narrative facts are preserved.',
+          'AI audited meaning, facts, and uncertainty preservation between original and rewritten text.',
+        issues: Array.isArray(parsedVerification.issues) ? parsedVerification.issues : [],
       };
 
       // Add semantic checks to verification items list
@@ -137,7 +140,10 @@ export async function POST(req: NextRequest) {
         category: 'intent',
         title: 'Core Meaning & Intent Integrity',
         status: semanticVerification.meaningPreserved ? 'passed' : 'failed',
-        details: semanticVerification.semanticExplanation,
+        details: semanticVerification.semanticExplanation +
+          (semanticVerification.issues && semanticVerification.issues.length > 0
+            ? ` (${semanticVerification.issues.join('; ')})`
+            : ''),
       });
 
       semanticChecksList.push({
@@ -146,24 +152,28 @@ export async function POST(req: NextRequest) {
         title: 'Unsupported Hallucination Filter',
         status: !semanticVerification.unsupportedClaimsFound ? 'passed' : 'warning',
         details: semanticVerification.unsupportedClaimsFound
-          ? 'Possible unverified details or exaggerated assertions added.'
-          : 'No unsupported claims or hallucinations introduced.',
+          ? 'Potential unverified details or exaggerated assertions flagged by semantic audit.'
+          : 'No unsupported claims or hallucinations detected in rewritten text.',
       });
-    } catch (vErr) {
-      console.warn('Semantic verification model call fallback:', vErr);
+    } catch (vErr: any) {
+      console.warn('Semantic verification model call failed:', vErr?.message || vErr);
+      semanticVerificationFailedToRun = true;
       semanticVerification = {
-        status: 'caution',
-        meaningPreserved: true,
+        status: 'incomplete',
+        meaningPreserved: false,
         unsupportedClaimsFound: false,
         tonalShiftAppropriate: true,
-        semanticExplanation: 'Semantic AI auditor temporarily unreachable; deterministic guardrails passed.',
+        semanticExplanation:
+          'Semantic verification could not complete (AI service unavailable or rate limited). Deterministic checks ran, but full semantic verification is incomplete.',
+        issues: ['Semantic verification service temporarily unavailable.'],
       };
       semanticChecksList.push({
         id: 'semantic-meaning',
         category: 'intent',
-        title: 'Core Meaning Audit',
+        title: 'Semantic Meaning & Intent Audit',
         status: 'warning',
-        details: 'Secondary semantic AI check could not complete. Manual verification recommended.',
+        details:
+          'Semantic verification request could not complete. Only deterministic pattern checks were completed. Manual review recommended.',
       });
     }
 
@@ -175,14 +185,34 @@ export async function POST(req: NextRequest) {
     let score = 100 - failedCount * 30 - warningCount * 12;
     score = Math.max(0, Math.min(100, score));
 
-    const overallPassed = failedCount === 0 && semanticVerification.meaningPreserved;
+    // Determine overall status
+    let overallStatus: TruthGuardResult['status'] = 'verified';
+    let overallPassed = false;
+    let summaryMessage = '';
+
+    if (failedCount > 0) {
+      overallStatus = 'failed';
+      overallPassed = false;
+      summaryMessage = `Truth Guard flagged ${failedCount} critical discrepancy: review highlighted changes before using.`;
+    } else if (semanticVerificationFailedToRun) {
+      overallStatus = 'incomplete';
+      overallPassed = false;
+      summaryMessage = 'Truth Guard verification incomplete: AI semantic check could not run. Review changes manually.';
+    } else if (warningCount > 0 || semanticVerification.status === 'caution') {
+      overallStatus = 'warning';
+      overallPassed = false;
+      summaryMessage = `Truth Guard detected ${warningCount} advisory warning(s): review highlighted discrepancies.`;
+    } else {
+      overallStatus = 'verified';
+      overallPassed = true;
+      summaryMessage = 'Truth Guard checks passed: All numbers, dates, entities, and core meaning preserved.';
+    }
 
     const truthGuard: TruthGuardResult = {
       score,
       passed: overallPassed,
-      summary: overallPassed
-        ? 'Truth Guard passed: Text accurately preserves numbers, facts, and intent.'
-        : 'Truth Guard warning: Inspect highlighted discrepancies before using.',
+      status: overallStatus,
+      summary: summaryMessage,
       deterministicChecks: allChecks,
       semanticVerification,
     };
