@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Sparkles, ShieldCheck, Cpu, RefreshCw } from 'lucide-react';
+import { Sparkles, Shield, Cpu, RefreshCw } from 'lucide-react';
 
 export default function HowItWorks() {
   const steps = [
@@ -24,7 +24,7 @@ export default function HowItWorks() {
       title: 'Deterministic Fact Checks',
       description:
         'Pattern-based checks compare original and rewritten text for numbers, percentages, currency, dates, and named entities to flag changes.',
-      icon: ShieldCheck,
+      icon: Shield,
     },
     {
       step: '04',
@@ -36,14 +36,17 @@ export default function HowItWorks() {
   ];
 
   return (
-    <section className="py-12 border-t border-slate-200/80 bg-white/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-10">
-          <h2 className="text-xl sm:text-2xl font-bold text-navy-900 tracking-tight">
+    <section className="py-12 border-t border-[#8E84E0]/15">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-[#8E84E0]/20 text-[11px] font-semibold text-[#6654F5] uppercase tracking-wider shadow-xs">
+            Multi-Stage Architecture
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#15152B] tracking-tight">
             How Truth Guard Checks Your Text
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 mt-2">
-            Designed to preserve facts and meaning by pairing deterministic guardrails with AI semantic inspection.
+          <p className="text-sm text-[#6F7088] leading-relaxed max-w-lg mx-auto">
+            Preserving factual integrity by pairing deterministic regex pattern guardrails with independent semantic inspection.
           </p>
         </div>
 
@@ -53,19 +56,24 @@ export default function HowItWorks() {
             return (
               <div
                 key={item.step}
-                className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs relative flex flex-col justify-between"
+                className="group relative bg-white/70 hover:bg-white backdrop-blur-md p-6 rounded-2xl border border-[#8E84E0]/20 hover:border-[#6654F5]/35 shadow-card hover:shadow-card-hover transition-all duration-300 flex flex-col justify-between"
               >
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center font-bold">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-[#F4F2FF] border border-[#6654F5]/15 text-[#6654F5] flex items-center justify-center transition-colors group-hover:bg-[#6654F5] group-hover:text-white">
                       <Icon className="w-5 h-5" />
                     </div>
-                    <span className="text-xs font-black text-slate-300 font-mono">
+                    <span className="text-2xl font-black text-[#8E84E0]/30 font-mono tracking-tighter group-hover:text-[#6654F5]/40 transition-colors">
                       {item.step}
                     </span>
                   </div>
-                  <h3 className="text-sm font-bold text-navy-900 mb-1.5">{item.title}</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">{item.description}</p>
+
+                  <h3 className="text-sm font-bold text-[#15152B] mb-2 leading-snug">
+                    {item.title}
+                  </h3>
+                  <p className="text-xs text-[#6F7088] leading-relaxed">
+                    {item.description}
+                  </p>
                 </div>
               </div>
             );

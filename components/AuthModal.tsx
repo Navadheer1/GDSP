@@ -54,20 +54,20 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-900/40 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#15152B]/40 backdrop-blur-sm animate-fade-in">
+      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-[0_20px_60px_rgba(21,21,43,0.2)] border border-[#8E84E0]/25 overflow-hidden">
         {/* Header decoration */}
-        <div className="bg-gradient-to-r from-brand-600 via-indigo-600 to-accent-purple px-6 py-5 text-white">
+        <div className="bg-gradient-to-r from-[#6654F5] via-[#7563FF] to-[#8A7CFF] px-6 py-5 text-white">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-white/10 rounded-lg backdrop-blur-md">
-                <Sparkles className="w-5 h-5 text-brand-100" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/15 rounded-xl backdrop-blur-md">
+                <Sparkles className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h3 className="font-semibold text-lg text-white">
+                <h3 className="font-bold text-base text-white">
                   {mode === 'signin' ? 'Sign in to Humanize AI' : 'Create Free Account'}
                 </h3>
-                <p className="text-xs text-brand-100/90">
+                <p className="text-xs text-white/80">
                   {mode === 'signin'
                     ? 'Access and sync your private rewrite history'
                     : 'Save sessions, audit trails, and access history'}
@@ -75,8 +75,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
               </div>
             </div>
             <button
+              type="button"
               onClick={onClose}
-              className="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition"
+              className="text-white/80 hover:text-white p-1.5 rounded-xl hover:bg-white/15 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               aria-label="Close"
             >
               <X className="w-5 h-5" />
@@ -84,10 +85,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-6 sm:p-7">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2.5 text-xs text-red-700">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
+            <div className="mb-4 p-3 bg-rose-50 border border-rose-200/90 rounded-2xl flex items-start gap-2.5 text-xs text-rose-800 animate-fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
               <p>{error}</p>
             </div>
           )}
@@ -95,7 +96,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'signup' && (
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-[#15152B] mb-1.5">
                   Full Name (Optional)
                 </label>
                 <input
@@ -103,13 +104,13 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="e.g. Alex Morgan"
-                  className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition"
+                  className="w-full px-4 py-2.5 text-sm bg-[#FAF9FF] border border-[#8E84E0]/25 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6654F5] focus:bg-white text-[#15152B] placeholder:text-[#9596AA] transition-all"
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-semibold text-[#15152B] mb-1.5">
                 Email Address
               </label>
               <input
@@ -118,12 +119,12 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@domain.com"
-                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition"
+                className="w-full px-4 py-2.5 text-sm bg-[#FAF9FF] border border-[#8E84E0]/25 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6654F5] focus:bg-white text-[#15152B] placeholder:text-[#9596AA] transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-semibold text-[#15152B] mb-1.5">
                 Password
               </label>
               <input
@@ -132,10 +133,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition"
+                className="w-full px-4 py-2.5 text-sm bg-[#FAF9FF] border border-[#8E84E0]/25 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6654F5] focus:bg-white text-[#15152B] placeholder:text-[#9596AA] transition-all"
               />
               {mode === 'signup' && (
-                <span className="text-[11px] text-slate-500 mt-1 block">
+                <span className="text-[11px] text-[#6F7088] mt-1 block">
                   Must be at least 6 characters
                 </span>
               )}
@@ -144,7 +145,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 py-2.5 px-4 bg-navy-900 hover:bg-navy-800 text-white text-sm font-medium rounded-xl shadow-md transition flex items-center justify-center gap-2 disabled:opacity-60"
+              className="w-full mt-2 py-3 px-4 bg-gradient-to-r from-[#6654F5] to-[#8A7CFF] hover:from-[#5542E5] hover:to-[#7869FF] text-white text-sm font-semibold rounded-xl shadow-button-primary hover:shadow-[0_4px_16px_rgba(102,84,245,0.4)] transition-all flex items-center justify-center gap-2 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6654F5]"
             >
               {loading ? (
                 <>
@@ -165,9 +166,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
             </button>
           </form>
 
-          <div className="mt-5 pt-4 border-t border-slate-100 text-center">
+          <div className="mt-5 pt-4 border-t border-[#8E84E0]/15 text-center">
             {mode === 'signin' ? (
-              <p className="text-xs text-slate-600">
+              <p className="text-xs text-[#6F7088]">
                 Don&apos;t have an account?{' '}
                 <button
                   type="button"
@@ -175,13 +176,13 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
                     setError(null);
                     setMode('signup');
                   }}
-                  className="font-semibold text-brand-600 hover:underline"
+                  className="font-semibold text-[#6654F5] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6654F5] rounded"
                 >
                   Create one here
                 </button>
               </p>
             ) : (
-              <p className="text-xs text-slate-600">
+              <p className="text-xs text-[#6F7088]">
                 Already have an account?{' '}
                 <button
                   type="button"
@@ -189,7 +190,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'signin' }: A
                     setError(null);
                     setMode('signin');
                   }}
-                  className="font-semibold text-brand-600 hover:underline"
+                  className="font-semibold text-[#6654F5] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6654F5] rounded"
                 >
                   Sign in
                 </button>

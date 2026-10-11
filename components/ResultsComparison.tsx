@@ -28,7 +28,7 @@ interface ResultsComparisonProps {
 }
 
 /**
- * Lightweight tokenized diff highlight between original and rewritten text
+ * Clean tokenized diff highlight between original and rewritten text
  */
 function renderHighlightedDiff(original: string, rewritten: string) {
   const origTokens = new Set(
@@ -51,7 +51,7 @@ function renderHighlightedDiff(original: string, rewritten: string) {
       return (
         <span
           key={idx}
-          className="bg-brand-50 text-brand-900 border-b-2 border-brand-300 font-semibold px-0.5 rounded-xs"
+          className="bg-[#EBE8FF] text-[#5542E5] border-b-2 border-[#8A7CFF] font-semibold px-0.5 rounded-xs"
         >
           {chunk}
         </span>
@@ -127,8 +127,8 @@ export default function ResultsComparison({
     <div className="space-y-4">
       {/* Verification Warning / Action Banner if issues found */}
       {hasIssues && (
-        <div className="p-4 bg-amber-50/90 border border-amber-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-900 shadow-xs">
-          <div className="flex items-start gap-2.5">
+        <div className="p-4 bg-amber-50/90 border border-amber-200/90 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-950 shadow-subtle">
+          <div className="flex items-start gap-3">
             <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
             <div>
               <strong className="font-semibold block text-amber-950">
@@ -146,7 +146,7 @@ export default function ResultsComparison({
                 type="button"
                 onClick={onSaferRewrite}
                 disabled={isRetrying}
-                className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-semibold transition flex items-center gap-1.5 shadow-xs"
+                className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-semibold transition-all duration-150 flex items-center gap-1.5 shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
               >
                 {isRetrying ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -161,22 +161,22 @@ export default function ResultsComparison({
       )}
 
       {/* Metrics Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm text-xs text-slate-600">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white/90 backdrop-blur-md p-4 rounded-2xl border border-[#8E84E0]/20 shadow-card text-xs text-[#6F7088]">
+        <div className="flex items-center gap-4 sm:gap-6">
           <div className="flex items-center gap-1.5">
-            <FileText className="w-4 h-4 text-brand-600" />
+            <FileText className="w-4 h-4 text-[#6654F5]" />
             <span>
               Words:{' '}
-              <strong className="text-slate-800 font-semibold">
+              <strong className="text-[#15152B] font-semibold">
                 {result.stats.originalWords}
               </strong>{' '}
-              <ArrowRight className="inline w-3 h-3 text-slate-400" />{' '}
-              <strong className="text-slate-800 font-semibold">
+              <ArrowRight className="inline w-3 h-3 text-[#9596AA]" />{' '}
+              <strong className="text-[#15152B] font-semibold">
                 {result.stats.rewrittenWords}
               </strong>{' '}
               <span
                 className={`text-[10px] font-bold ${
-                  wordDelta < 0 ? 'text-emerald-600' : 'text-slate-500'
+                  wordDelta < 0 ? 'text-emerald-600' : 'text-[#6F7088]'
                 }`}
               >
                 ({wordDelta > 0 ? `+${wordDelta}` : wordDelta})
@@ -184,10 +184,10 @@ export default function ResultsComparison({
             </span>
           </div>
 
-          <div className="hidden sm:flex items-center gap-1.5 border-l border-slate-200 pl-4">
-            <Clock className="w-4 h-4 text-slate-400" />
+          <div className="hidden sm:flex items-center gap-1.5 border-l border-[#8E84E0]/20 pl-4">
+            <Clock className="w-4 h-4 text-[#9596AA]" />
             <span>
-              Reading Time: <strong>~{result.stats.readingTimeSeconds}s</strong>
+              Reading Time: <strong className="text-[#15152B]">~{result.stats.readingTimeSeconds}s</strong>
             </span>
           </div>
         </div>
@@ -197,13 +197,13 @@ export default function ResultsComparison({
           <button
             type="button"
             onClick={() => setShowDiff(!showDiff)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6654F5] ${
               showDiff
-                ? 'bg-brand-50 border-brand-300 text-brand-700'
-                : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
+                ? 'bg-[#EBE8FF] border-[#6654F5]/40 text-[#5542E5]'
+                : 'bg-white border-[#8E84E0]/20 hover:bg-[#F4F2FF] text-[#6F7088] hover:text-[#15152B]'
             }`}
           >
-            <Eye className="w-3.5 h-3.5 text-brand-600" />
+            <Eye className="w-3.5 h-3.5 text-[#6654F5]" />
             <span>{showDiff ? 'Showing Changes' : 'Highlight Changes'}</span>
           </button>
 
@@ -212,18 +212,18 @@ export default function ResultsComparison({
             type="button"
             onClick={handleSaveToHistory}
             disabled={saving || saveSuccess}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 transition ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6654F5] transition-all duration-150 ${
               saveSuccess
                 ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
+                : 'bg-white border-[#8E84E0]/20 hover:bg-[#F4F2FF] text-[#6F7088] hover:text-[#15152B]'
             }`}
           >
             {saving ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#6654F5]" />
             ) : saveSuccess ? (
               <Check className="w-3.5 h-3.5 text-emerald-600" />
             ) : (
-              <BookmarkPlus className="w-3.5 h-3.5 text-brand-600" />
+              <BookmarkPlus className="w-3.5 h-3.5 text-[#6654F5]" />
             )}
             <span>{saveSuccess ? 'Saved!' : 'Save to History'}</span>
           </button>
@@ -233,41 +233,42 @@ export default function ResultsComparison({
             type="button"
             onClick={onRetry}
             disabled={isRetrying}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 transition disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#8E84E0]/20 bg-white hover:bg-[#F4F2FF] text-[#6F7088] hover:text-[#15152B] text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6654F5] transition-all duration-150 disabled:opacity-50"
             title="Generate a fresh rewrite"
           >
-            <RotateCcw className={`w-3.5 h-3.5 text-slate-500 ${isRetrying ? 'animate-spin' : ''}`} />
+            <RotateCcw className={`w-3.5 h-3.5 text-[#6F7088] ${isRetrying ? 'animate-spin' : ''}`} />
             <span>{isRetrying ? 'Retrying...' : 'Try Again'}</span>
           </button>
         </div>
       </div>
 
       {saveError && (
-        <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
+        <div className="p-3 bg-amber-50 border border-amber-200/90 rounded-xl text-xs text-amber-900 animate-fade-in">
           {saveError}
         </div>
       )}
 
-      {/* Side-by-side or stacked text comparison */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* Balanced Two-Column Comparison */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Original Text Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
-          <div className="bg-slate-50/80 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600">
-                Original Text
+        <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-[#8E84E0]/20 shadow-card flex flex-col overflow-hidden">
+          <div className="bg-[#FAF9FF] px-5 py-3 border-b border-[#8E84E0]/15 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#9596AA]" />
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#6F7088]">
+                Original Draft
               </h4>
             </div>
             <button
+              type="button"
               onClick={() => copyToClipboard(result.originalText, true)}
-              className="text-slate-500 hover:text-slate-800 p-1 rounded-md hover:bg-slate-200/50 transition flex items-center gap-1 text-[11px]"
+              className="text-[#6F7088] hover:text-[#15152B] p-1.5 rounded-lg hover:bg-[#F4F2FF] transition-colors flex items-center gap-1 text-[11px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6654F5]"
               title="Copy original"
             >
               {copiedOriginal ? (
                 <>
                   <Check className="w-3.5 h-3.5 text-emerald-600" />
-                  <span className="text-emerald-600 font-medium">Copied</span>
+                  <span className="text-emerald-600 font-semibold">Copied</span>
                 </>
               ) : (
                 <>
@@ -277,23 +278,24 @@ export default function ResultsComparison({
               )}
             </button>
           </div>
-          <div className="p-4 flex-1 whitespace-pre-wrap text-sm text-slate-700 leading-relaxed font-normal min-h-[160px]">
+          <div className="p-5 flex-1 whitespace-pre-wrap text-sm text-[#6F7088] leading-relaxed font-normal min-h-[170px]">
             {result.originalText}
           </div>
         </div>
 
         {/* Humanized Text Card */}
-        <div className="bg-white rounded-2xl border-2 border-brand-500/30 ring-4 ring-brand-50/50 shadow-sm flex flex-col overflow-hidden">
-          <div className="bg-gradient-to-r from-brand-50 to-indigo-50/60 px-4 py-3 border-b border-brand-100 flex items-center justify-between">
+        <div className="bg-white rounded-2xl border-2 border-[#6654F5]/35 shadow-[0_12px_32px_-4px_rgba(102,84,245,0.15)] flex flex-col overflow-hidden">
+          <div className="bg-gradient-to-r from-[#F4F2FF] to-[#FAF9FF] px-5 py-3 border-b border-[#6654F5]/20 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-brand-600" />
-              <h4 className="text-xs font-bold uppercase tracking-wider text-brand-900">
+              <Sparkles className="w-4 h-4 text-[#6654F5]" />
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#15152B]">
                 Humanized Output
               </h4>
             </div>
             <button
+              type="button"
               onClick={() => copyToClipboard(result.humanizedText, false)}
-              className="bg-brand-600 hover:bg-brand-700 text-white px-2.5 py-1 rounded-lg shadow-sm transition flex items-center gap-1 text-[11px] font-semibold"
+              className="bg-[#6654F5] hover:bg-[#5542E5] text-white px-3 py-1.5 rounded-lg shadow-sm transition-colors flex items-center gap-1.5 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6654F5]"
               title="Copy rewritten"
             >
               {copiedHumanized ? (
@@ -309,7 +311,7 @@ export default function ResultsComparison({
               )}
             </button>
           </div>
-          <div className="p-4 flex-1 whitespace-pre-wrap text-sm text-navy-900 font-medium leading-relaxed min-h-[160px] selection:bg-brand-200">
+          <div className="p-5 flex-1 whitespace-pre-wrap text-sm text-[#15152B] font-medium leading-relaxed min-h-[170px] selection:bg-[#EBE8FF]">
             {showDiff
               ? renderHighlightedDiff(result.originalText, result.humanizedText)
               : result.humanizedText}

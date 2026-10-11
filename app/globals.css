@@ -3,18 +3,53 @@
 @tailwind utilities;
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0b1329;
+  /* Design System Colors */
+  --background: #FAF9FF;
+  --foreground: #15152B;
+  --surface: #FFFFFF;
+  --surface-secondary: #F4F2FF;
+  --surface-hover: #ECE9FD;
+
+  --ink-primary: #15152B;
+  --ink-secondary: #6F7088;
+  --ink-subtle: #9596AA;
+
+  --accent-violet: #6654F5;
+  --accent-indigo: #8A7CFF;
+  --accent-sky: #78B9FF;
+
+  --border-subtle: rgba(142, 132, 224, 0.18);
+  --border-hover: rgba(102, 84, 245, 0.35);
+
+  --status-emerald: #10B981;
+  --status-amber: #F59E0B;
+  --status-coral: #F43F5E;
 }
 
 body {
   color: var(--foreground);
   background-color: var(--background);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
-/* Custom scrollbars for textareas and history lists */
+/* Atmospheric subtle grid background */
+.bg-grid-pattern {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(102, 84, 245, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(102, 84, 245, 0.035) 1px, transparent 1px);
+}
+
+/* Atmospheric subtle dot pattern */
+.bg-dot-pattern {
+  background-image: radial-gradient(rgba(102, 84, 245, 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Custom refined scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -23,9 +58,21 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: rgba(111, 112, 136, 0.25);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgba(102, 84, 245, 0.45);
+}
+
+/* Respect reduced motion globally */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

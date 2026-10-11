@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { TruthGuardResult } from '@/types';
 import {
+  Shield,
   ShieldCheck,
   AlertTriangle,
   XCircle,
@@ -12,6 +13,9 @@ import {
   Calendar,
   Layers,
   Sparkles,
+  Info,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 interface TruthGuardPanelProps {
@@ -20,51 +24,31 @@ interface TruthGuardPanelProps {
 }
 
 export default function TruthGuardPanel({ truthGuard, loading }: TruthGuardPanelProps) {
+  const [detailsExpanded, setDetailsExpanded] = useState(false);
+
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-brand-50 rounded-xl text-brand-600 animate-pulse">
-            <ShieldCheck className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-navy-900">Truth Guard Integrity Engine</h3>
-            <p className="text-xs text-slate-500">
-              Running deterministic checks and AI semantic verification...
-            </p>
-          </div>
+      <div className="bg-[#FAF9FF] rounded-2xl border border-[#8E84E0]/20 p-4 space-y-2.5 animate-pulse">
+        <div className="flex items-center gap-2">
+          <Shield className="w-4 h-4 text-[#6654F5]" />
+          <span className="text-xs font-semibold text-[#15152B]">
+            Truth Guard active: verifying numbers, entities & semantic nuance...
+          </span>
         </div>
-        <div className="space-y-3">
-          <div className="h-4 bg-slate-100 rounded-md animate-pulse w-3/4" />
-          <div className="h-4 bg-slate-100 rounded-md animate-pulse w-1/2" />
-          <div className="h-4 bg-slate-100 rounded-md animate-pulse w-5/6" />
+        <div className="space-y-1.5 pt-1">
+          <div className="h-2 bg-[#EBE8FF] rounded w-3/4" />
+          <div className="h-2 bg-[#EBE8FF] rounded w-1/2" />
         </div>
       </div>
     );
   }
 
+  // Before checks run: do not show verification success or empty reports
   if (!truthGuard) {
-    return (
-      <div className="bg-gradient-to-br from-white to-slate-50/50 rounded-2xl border border-slate-200/80 p-6 shadow-sm">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2.5 bg-slate-100 text-slate-600 rounded-xl">
-            <ShieldCheck className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-navy-900">Truth Guard Semantic Shield</h3>
-            <p className="text-xs text-slate-500">
-              Automatic validation of facts, numbers, dates, and author intent
-            </p>
-          </div>
-        </div>
-        <p className="text-xs text-slate-600 leading-relaxed mt-2">
-          When you humanize text, Truth Guard runs rigorous dual audits: deterministic regex verification for numbers, dates, and named entities, followed by an independent AI semantic check to confirm no meaning was altered or hallucinated.
-        </p>
-      </div>
-    );
+    return null;
   }
 
-  const { score, passed, summary, deterministicChecks, semanticVerification } = truthGuard;
+  const { score, summary, deterministicChecks, semanticVerification } = truthGuard;
 
   // Icon selector based on category
   const getCategoryIcon = (category: string) => {
@@ -80,169 +64,181 @@ export default function TruthGuardPanel({ truthGuard, loading }: TruthGuardPanel
     }
   };
 
+  const getStatusBadge = (status: 'verified' | 'warning' | 'failed' | 'incomplete') => {
+    switch (status) {
+      case 'verified':
+        return {
+          bg: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+          badgeText: 'bg-emerald-100 text-emerald-800',
+          label: 'Verified',
+          icon: <ShieldCheck className="w-4 h-4 text-emerald-600" />,
+        };
+      case 'warning':
+        return {
+          bg: 'bg-amber-50 text-amber-800 border-amber-200',
+          badgeText: 'bg-amber-100 text-amber-800',
+          label: 'Advisory Warning',
+          icon: <AlertTriangle className="w-4 h-4 text-amber-600" />,
+        };
+      case 'failed':
+        return {
+          bg: 'bg-rose-50 text-rose-800 border-rose-200',
+          badgeText: 'bg-rose-100 text-rose-800',
+          label: 'Discrepancy Detected',
+          icon: <XCircle className="w-4 h-4 text-rose-600" />,
+        };
+      case 'incomplete':
+      default:
+        return {
+          bg: 'bg-slate-100 text-slate-800 border-slate-200',
+          badgeText: 'bg-slate-200 text-slate-800',
+          label: 'Audit Incomplete',
+          icon: <Info className="w-4 h-4 text-slate-600" />,
+        };
+    }
+  };
+
+  const statusBadge = getStatusBadge(truthGuard.status);
+  const passedCount = deterministicChecks.filter((c) => c.status === 'passed').length;
+  const issueCount = deterministicChecks.filter((c) => c.status !== 'passed').length;
+
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
-      {/* Top Score Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-        <div className="flex items-start gap-3">
-          <div
-            className={`p-2.5 rounded-xl ${
-              passed
-                ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
-                : truthGuard.status === 'incomplete'
-                ? 'bg-amber-50 text-amber-600 border border-amber-200'
-                : truthGuard.status === 'warning'
-                ? 'bg-amber-50 text-amber-600 border border-amber-200'
-                : 'bg-red-50 text-red-600 border border-red-200'
-            }`}
-          >
-            {passed ? (
-              <ShieldCheck className="w-6 h-6" />
-            ) : truthGuard.status === 'failed' ? (
-              <XCircle className="w-6 h-6" />
-            ) : (
-              <AlertTriangle className="w-6 h-6" />
-            )}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-navy-900">Truth Guard Report</h3>
+    <div className={`rounded-2xl border ${statusBadge.bg} p-4 transition-all space-y-3`}>
+      {/* Compact Header Summary */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-2.5 min-w-0">
+          <div className="mt-0.5 shrink-0">{statusBadge.icon}</div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold text-[#15152B]">
+                Truth Guard Audit
+              </span>
               <span
-                className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                  passed
-                    ? 'bg-emerald-100 text-emerald-800'
-                    : truthGuard.status === 'incomplete'
-                    ? 'bg-amber-100 text-amber-800'
-                    : truthGuard.status === 'warning'
-                    ? 'bg-amber-100 text-amber-800'
-                    : 'bg-red-100 text-red-800'
-                }`}
+                className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${statusBadge.badgeText}`}
               >
-                {passed
-                  ? 'All Integrity Checks Passed'
-                  : truthGuard.status === 'incomplete'
-                  ? 'Verification Incomplete'
-                  : truthGuard.status === 'warning'
-                  ? 'Advisory Warnings'
-                  : 'Factual Discrepancies Detected'}
+                {statusBadge.label}
               </span>
             </div>
-            <p className="text-xs text-slate-600 mt-0.5">{summary}</p>
+            <p className="text-xs text-[#15152B]/85 mt-0.5 leading-relaxed">
+              {summary}
+            </p>
           </div>
         </div>
 
-        {/* Score Ring / Pill */}
-        <div className="flex items-center gap-3 self-end sm:self-auto bg-slate-50 px-4 py-2 rounded-xl border border-slate-200/80">
-          <div className="text-right">
-            <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
-              Fidelity Score
-            </span>
-            <span
-              className={`text-xl font-black ${
-                truthGuard.status === 'incomplete'
-                  ? 'text-amber-600'
-                  : score >= 85
-                  ? 'text-emerald-600'
-                  : score >= 70
-                  ? 'text-amber-600'
-                  : 'text-red-600'
-              }`}
-            >
-              {truthGuard.status === 'incomplete' ? `${score}%*` : `${score}%`}
-            </span>
-            {truthGuard.status === 'incomplete' && (
-              <span className="text-[9px] text-amber-600 block">*Partial audit</span>
-            )}
-          </div>
+        {/* Fidelity Index Indicator */}
+        <div className="shrink-0 text-right bg-white/70 px-2.5 py-1 rounded-xl border border-black/5 shadow-2xs">
+          <span className="text-[9px] uppercase font-bold text-[#6F7088] block">Fidelity</span>
+          <span
+            className={`text-sm font-black ${
+              truthGuard.status === 'incomplete'
+                ? 'text-amber-600'
+                : score >= 85
+                ? 'text-emerald-700'
+                : score >= 70
+                ? 'text-amber-700'
+                : 'text-rose-700'
+            }`}
+          >
+            {truthGuard.status === 'incomplete' ? `${score}%*` : `${score}%`}
+          </span>
         </div>
       </div>
 
-      {/* Semantic Check Summary Callout */}
-      <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/70 text-xs text-slate-700">
-        <div className="flex items-center justify-between font-semibold text-slate-800 mb-1">
-          <span className="flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-brand-600" /> AI Semantic Verification
+      {/* Semantic Check Summary */}
+      <div className="p-3 bg-white/70 rounded-xl border border-black/5 text-xs text-[#15152B] space-y-1">
+        <div className="flex items-center justify-between font-semibold">
+          <span className="flex items-center gap-1.5 text-xs text-[#15152B]">
+            <Sparkles className="w-3.5 h-3.5 text-[#6654F5]" /> AI Semantic Audit
           </span>
           <span
             className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
               semanticVerification.status === 'verified'
-                ? 'bg-emerald-100 text-emerald-700'
+                ? 'bg-emerald-100 text-emerald-800'
                 : semanticVerification.status === 'caution'
-                ? 'bg-amber-100 text-amber-700'
+                ? 'bg-amber-100 text-amber-800'
                 : semanticVerification.status === 'incomplete'
-                ? 'bg-amber-100 text-amber-700'
-                : 'bg-red-100 text-red-700'
+                ? 'bg-slate-200 text-slate-800'
+                : 'bg-rose-100 text-rose-800'
             }`}
           >
             {semanticVerification.status}
           </span>
         </div>
-        <p className="text-slate-600 leading-relaxed text-[11px]">
+        <p className="text-[#6F7088] text-[11px] leading-relaxed">
           {semanticVerification.semanticExplanation}
         </p>
       </div>
 
-      {/* Granular Checks Grid */}
-      <div>
-        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">
-          Fidelity & Entity Checks
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {deterministicChecks.map((check) => {
-            const isPassed = check.status === 'passed';
-            const isWarn = check.status === 'warning';
+      {/* Granular checks toggle & collapsible breakdown */}
+      {deterministicChecks.length > 0 && (
+        <div className="pt-1">
+          <button
+            type="button"
+            onClick={() => setDetailsExpanded(!detailsExpanded)}
+            className="flex items-center justify-between w-full py-1.5 text-xs font-semibold text-[#15152B] hover:text-[#6654F5] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6654F5] rounded-lg"
+          >
+            <span className="flex items-center gap-1.5">
+              <span>Detailed Checks ({passedCount} passed{issueCount > 0 ? `, ${issueCount} flagged` : ''})</span>
+            </span>
+            <div className="flex items-center gap-1 text-[11px] text-[#6F7088]">
+              <span>{detailsExpanded ? 'Hide' : 'Inspect'}</span>
+              {detailsExpanded ? (
+                <ChevronUp className="w-3.5 h-3.5" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5" />
+              )}
+            </div>
+          </button>
 
-            return (
-              <div
-                key={check.id}
-                className={`p-3.5 rounded-xl border transition ${
-                  isPassed
-                    ? 'bg-white border-slate-200'
-                    : isWarn
-                    ? 'bg-amber-50/60 border-amber-200/90'
-                    : 'bg-red-50/60 border-red-200/90'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2 mb-1.5">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-navy-900">
-                    <span className="text-slate-400">{getCategoryIcon(check.category)}</span>
-                    <span>{check.title}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span
-                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
+          {detailsExpanded && (
+            <div className="mt-2 space-y-2 animate-fade-in">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {deterministicChecks.map((check) => {
+                  const isPassed = check.status === 'passed';
+                  const isWarn = check.status === 'warning';
+
+                  return (
+                    <div
+                      key={check.id}
+                      className={`p-2.5 rounded-xl border text-xs ${
                         isPassed
-                          ? 'bg-emerald-100 text-emerald-800'
+                          ? 'bg-white/80 border-[#8E84E0]/20'
                           : isWarn
-                          ? 'bg-amber-100 text-amber-800'
-                          : 'bg-red-100 text-red-800'
+                          ? 'bg-amber-50/90 border-amber-300'
+                          : 'bg-rose-50/90 border-rose-300'
                       }`}
                     >
-                      {check.status}
-                    </span>
-                    {isPassed ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    ) : isWarn ? (
-                      <AlertTriangle className="w-4 h-4 text-amber-500" />
-                    ) : (
-                      <XCircle className="w-4 h-4 text-red-500" />
-                    )}
-                  </div>
-                </div>
-                <p className="text-[11px] text-slate-600 leading-relaxed">{check.details}</p>
+                      <div className="flex items-start justify-between gap-1 mb-1">
+                        <div className="flex items-center gap-1.5 font-bold text-[#15152B] text-[11px]">
+                          <span className="text-[#6F7088]">{getCategoryIcon(check.category)}</span>
+                          <span className="truncate">{check.title}</span>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {isPassed ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          ) : isWarn ? (
+                            <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                          ) : (
+                            <XCircle className="w-3.5 h-3.5 text-rose-500" />
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-[#6F7088] leading-relaxed">{check.details}</p>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
-        </div>
-      </div>
 
-      {/* Transparency Disclaimer */}
-      <div className="flex items-start gap-2 pt-2 border-t border-slate-100 text-[11px] text-slate-500">
-        <HelpCircle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-400" />
-        <p>
-          Truth Guard combines deterministic pattern recognition with semantic auditing to minimize factual errors. As with any AI system, always review important legal, financial, or confidential documents manually before final publication.
-        </p>
-      </div>
+              <div className="flex items-start gap-1.5 pt-2 text-[10px] text-[#9596AA]">
+                <HelpCircle className="w-3 h-3 shrink-0 mt-0.5" />
+                <span>
+                  Deterministic matching inspects numbers, entities, and symbols. Manual review recommended for sensitive data.
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

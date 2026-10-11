@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { SavedHistoryItem } from '@/types';
 import { useAuth } from '@/lib/firebase/authContext';
 import { getUserHistory, deleteHistoryItem } from '@/lib/firebase/history';
@@ -26,7 +26,7 @@ export default function HistoryDrawer({ isOpen, onClose, onSelectHistory }: Hist
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
@@ -37,13 +37,13 @@ export default function HistoryDrawer({ isOpen, onClose, onSelectHistory }: Hist
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     if (isOpen && user) {
       fetchHistory();
     }
-  }, [isOpen, user]);
+  }, [isOpen, user, fetchHistory]);
 
   if (!isOpen) return null;
 
@@ -62,40 +62,42 @@ export default function HistoryDrawer({ isOpen, onClose, onSelectHistory }: Hist
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-navy-900/30 backdrop-blur-xs flex justify-end">
-      <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col border-l border-slate-200 animate-slide-left">
+    <div className="fixed inset-0 z-50 overflow-hidden bg-[#15152B]/40 backdrop-blur-xs flex justify-end animate-fade-in">
+      <div className="w-full max-w-md bg-white h-full shadow-[0_20px_60px_rgba(21,21,43,0.25)] flex flex-col border-l border-[#8E84E0]/20">
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-brand-50 text-brand-600 rounded-lg">
+        <div className="p-5 border-b border-[#8E84E0]/15 flex items-center justify-between bg-[#FAF9FF]">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-[#F4F2FF] text-[#6654F5] rounded-xl border border-[#6654F5]/20">
               <History className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-navy-900">Your Rewrite History</h3>
-              <p className="text-[11px] text-slate-500">Synced to Cloud Firestore</p>
+              <h3 className="text-sm font-bold text-[#15152B]">Your Rewrite History</h3>
+              <p className="text-[11px] text-[#6F7088]">Synced to Cloud Firestore</p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-lg transition"
+            aria-label="Close history drawer"
+            className="p-1.5 text-[#6F7088] hover:text-[#15152B] hover:bg-[#F4F2FF] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6654F5]"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* List Content */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        <div className="flex-1 overflow-y-auto p-5 space-y-3.5">
           {loading ? (
-            <div className="flex flex-col items-center justify-center h-48 text-slate-400">
-              <Loader2 className="w-6 h-6 animate-spin text-brand-600 mb-2" />
+            <div className="flex flex-col items-center justify-center h-48 text-[#6F7088]">
+              <Loader2 className="w-6 h-6 animate-spin text-[#6654F5] mb-2.5" />
               <p className="text-xs">Loading saved rewrites...</p>
             </div>
           ) : historyItems.length === 0 ? (
-            <div className="text-center py-12 px-4">
-              <History className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-              <p className="text-sm font-semibold text-slate-700">No saved rewrites yet</p>
-              <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
-                Humanize text and click &ldquo;Save to History&rdquo; to access your previous runs at any time.
+            <div className="text-center py-16 px-4">
+              <History className="w-8 h-8 text-[#9596AA] mx-auto mb-2.5" />
+              <p className="text-sm font-semibold text-[#15152B]">No saved rewrites yet</p>
+              <p className="text-xs text-[#6F7088] mt-1.5 max-w-xs mx-auto leading-relaxed">
+                Humanize text and click &ldquo;Save to History&rdquo; to store and audit your revisions.
               </p>
             </div>
           ) : (
@@ -114,24 +116,24 @@ export default function HistoryDrawer({ isOpen, onClose, onSelectHistory }: Hist
                     onSelectHistory(item);
                     onClose();
                   }}
-                  className="group p-3.5 rounded-xl border border-slate-200 hover:border-brand-300 hover:bg-brand-50/20 cursor-pointer transition relative"
+                  className="group p-4 rounded-2xl border border-[#8E84E0]/20 hover:border-[#6654F5]/40 hover:bg-[#F4F2FF]/40 cursor-pointer transition-all duration-150 relative shadow-subtle hover:shadow-card"
                 >
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 mb-1.5">
-                    <span className="font-semibold text-brand-700 uppercase tracking-wider text-[10px] bg-brand-50 px-2 py-0.5 rounded border border-brand-200">
+                  <div className="flex items-center justify-between text-[11px] text-[#6F7088] mb-2">
+                    <span className="font-semibold text-[#6654F5] uppercase tracking-wider text-[10px] bg-[#F4F2FF] px-2 py-0.5 rounded-full border border-[#6654F5]/20">
                       {item.context.replace('-', ' ')}
                     </span>
-                    <span className="flex items-center gap-1 text-[10px]">
-                      <Calendar className="w-3 h-3 text-slate-400" />
+                    <span className="flex items-center gap-1 text-[10px] text-[#9596AA]">
+                      <Calendar className="w-3 h-3 text-[#9596AA]" />
                       {dateStr}
                     </span>
                   </div>
 
-                  <p className="text-xs text-slate-800 line-clamp-2 font-medium mb-1.5">
+                  <p className="text-xs text-[#15152B] line-clamp-2 font-medium mb-2.5 leading-relaxed">
                     {item.humanizedText}
                   </p>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px]">
-                    <span className="text-slate-500 flex items-center gap-1">
+                  <div className="flex items-center justify-between pt-2.5 border-t border-[#8E84E0]/15 text-[11px]">
+                    <span className="text-[#6F7088] flex items-center gap-1.5">
                       {item.verificationStatus === 'passed' ? (
                         <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                       ) : (
@@ -141,13 +143,14 @@ export default function HistoryDrawer({ isOpen, onClose, onSelectHistory }: Hist
                     </span>
 
                     <button
+                      type="button"
                       onClick={(e) => handleDelete(e, item.id)}
                       disabled={deletingId === item.id}
-                      className="text-slate-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition"
+                      className="text-[#9596AA] hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
                       title="Delete from history"
                     >
                       {deletingId === item.id ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-red-500" />
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-500" />
                       ) : (
                         <Trash2 className="w-3.5 h-3.5" />
                       )}

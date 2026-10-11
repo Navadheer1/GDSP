@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import ContextSelector from './ContextSelector';
 import ToneSelector from './ToneSelector';
-import ResultsComparison from './ResultsComparison';
 import TruthGuardPanel from './TruthGuardPanel';
 import { WritingContext, WritingTone, HumanizeResponse, SavedHistoryItem } from '@/types';
 import {
@@ -14,7 +13,17 @@ import {
   SlidersHorizontal,
   ChevronDown,
   ChevronUp,
+  Copy,
+  Check,
+  RotateCcw,
+  Eye,
+  Sliders,
+  BookmarkPlus,
+  Clock,
+  FileText,
 } from 'lucide-react';
+import { useAuth } from '@/lib/firebase/authContext';
+import { saveRewriteHistory } from '@/lib/firebase/history';
 
 interface HumanizeWorkspaceProps {
   onSavedToHistory?: () => void;
@@ -48,10 +57,45 @@ const SAMPLE_TEXTS = [
   },
 ];
 
+/**
+ * Clean tokenized diff highlight between original and rewritten text
+ */
+function renderHighlightedDiff(original: string, rewritten: string) {
+  const origTokens = new Set(
+    original
+      .toLowerCase()
+      .split(/[\s,.;:!?()]+/)
+      .filter((t) => t.length > 2)
+  );
+
+  const rewrTokens = rewritten.split(/(\s+)/);
+
+  return rewrTokens.map((chunk, idx) => {
+    const cleanChunk = chunk.toLowerCase().replace(/[^a-z0-9$%]/g, '');
+    if (!cleanChunk || cleanChunk.length <= 2) {
+      return <span key={idx}>{chunk}</span>;
+    }
+
+    const isNew = !origTokens.has(cleanChunk);
+    if (isNew) {
+      return (
+        <span
+          key={idx}
+          className="bg-[#EBE8FF] text-[#5542E5] border-b-2 border-[#8A7CFF] font-semibold px-0.5 rounded-xs"
+        >
+          {chunk}
+        </span>
+      );
+    }
+    return <span key={idx}>{chunk}</span>;
+  });
+}
+
 export default function HumanizeWorkspace({
   onSavedToHistory,
   loadedHistoryItem,
 }: HumanizeWorkspaceProps) {
+  const { user } = useAuth();
   const [inputText, setInputText] = useState('');
   const [context, setContext] = useState<WritingContext>('recruiter-feedback');
   const [tone, setTone] = useState<WritingTone>('professional');
@@ -62,7 +106,14 @@ export default function HumanizeWorkspace({
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<HumanizeResponse | null>(null);
 
-  // Sync if an item was opened from the History drawer
+  // Output panel local states
+  const [copiedOutput, setCopiedOutput] = useState(false);
+  const [showDiff, setShowDiff] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Sync if an item was loaded from the History drawer
   React.useEffect(() => {
     if (loadedHistoryItem) {
       setInputText(loadedHistoryItem.originalText);
@@ -117,6 +168,8 @@ export default function HumanizeWorkspace({
 
     setLoading(true);
     setError(null);
+    setSaveSuccess(false);
+    setSaveError(null);
 
     const instructionsToSend =
       overrideInstructions !== undefined
@@ -153,7 +206,8 @@ export default function HumanizeWorkspace({
   };
 
   const handleSaferRewrite = () => {
-    const safeInstruction = 'STRICT FACTUAL ADHERENCE: Strictly retain all numbers, dates, and named entities without altering any phrasing of metrics, and retain all uncertainty indicators intact.';
+    const safeInstruction =
+      'STRICT FACTUAL ADHERENCE: Strictly retain all numbers, dates, and named entities without altering any phrasing of metrics, and retain all uncertainty indicators intact.';
     setCustomInstructions(safeInstruction);
     setShowAdvanced(true);
     handleHumanize(safeInstruction);
@@ -163,194 +217,385 @@ export default function HumanizeWorkspace({
     setInputText('');
     setResult(null);
     setError(null);
+    setShowDiff(false);
+    setSaveSuccess(false);
+    setSaveError(null);
   };
 
-  const loadSample = (sample: typeof SAMPLE_TEXTS[0]) => {
+  const loadSample = (sample: (typeof SAMPLE_TEXTS)[0]) => {
     setInputText(sample.text);
     setContext(sample.context);
     setTone(sample.tone);
     setError(null);
+    setSaveSuccess(false);
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedOutput(true);
+      setTimeout(() => setCopiedOutput(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleSaveToHistory = async () => {
+    if (!result) return;
+    if (!user) {
+      setSaveError('Sign in to save this rewrite to your history.');
+      return;
+    }
+
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await saveRewriteHistory(user.uid, {
+        originalText: result.originalText,
+        humanizedText: result.humanizedText,
+        context: result.context,
+        tone: result.tone,
+        verificationStatus: result.truthGuard.passed ? 'passed' : 'warning',
+        verificationScore: result.truthGuard.score,
+      });
+      setSaveSuccess(true);
+      if (onSavedToHistory) onSavedToHistory();
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err: any) {
+      console.error('Save history error:', err);
+      setSaveError('Failed to save to Firestore. Check connection.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const inputCharCount = inputText.length;
   const inputWordCount = inputText.trim() ? inputText.trim().split(/\s+/).length : 0;
+  const hasIssues = result ? !result.truthGuard.passed || result.truthGuard.status !== 'verified' : false;
 
   return (
-    <div className="space-y-8">
-      {/* Workspace Input Card */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-5 sm:p-6 space-y-6">
-        {/* Sample text picker pills */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Quick Samples:
-            </span>
-            <span className="text-[11px] text-slate-400">Click any sample to autofill</span>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {SAMPLE_TEXTS.map((sample) => {
-              const isCurrent = inputText === sample.text;
-              return (
-                <button
-                  key={sample.label}
-                  type="button"
-                  disabled={loading}
-                  onClick={() => loadSample(sample)}
-                  className={`text-xs px-3 py-1.5 rounded-lg font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
-                    isCurrent
-                      ? 'bg-brand-100 text-brand-900 border border-brand-300 shadow-xs'
-                      : 'bg-slate-100 hover:bg-slate-200/90 text-slate-700 hover:text-slate-900'
-                  } ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                >
-                  {sample.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+    <div className="space-y-4">
+      {/* Quick Samples: Single Compact Horizontal Row */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs no-scrollbar">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-[#6F7088] shrink-0 mr-1">
+          Samples:
+        </span>
+        {SAMPLE_TEXTS.map((sample) => {
+          const isCurrent = inputText === sample.text;
+          return (
+            <button
+              key={sample.label}
+              type="button"
+              disabled={loading}
+              onClick={() => loadSample(sample)}
+              className={`shrink-0 text-xs px-3 py-1 rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6654F5] ${
+                isCurrent
+                  ? 'bg-[#6654F5] text-white font-semibold shadow-2xs'
+                  : 'bg-white hover:bg-[#F4F2FF] text-[#6F7088] hover:text-[#15152B] border border-[#8E84E0]/20'
+              } ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+            >
+              {sample.label}
+            </button>
+          );
+        })}
+      </div>
 
-        {/* Text Input Area */}
-        <div className="relative">
-          <label htmlFor="humanize-input" className="sr-only">
-            Text to humanize
-          </label>
-          <textarea
-            id="humanize-input"
-            rows={5}
-            value={inputText}
-            disabled={loading}
-            onChange={(e) => setInputText(e.target.value)}
-            placeholder="Paste stiff, robotic, overly formal, or repetitive text here (up to 8,000 characters)..."
-            className="w-full p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50/80 focus:bg-white text-navy-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition resize-y min-h-[140px]"
-          />
-
-          <div className="flex items-center justify-between mt-2 text-xs text-slate-400 px-1">
-            <div className="flex items-center gap-2.5">
-              <span className="font-medium text-slate-600">{inputWordCount} words</span>
-              <span>•</span>
-              <span
-                className={`font-medium ${
-                  inputCharCount > 7500
-                    ? 'text-amber-600 font-semibold'
-                    : 'text-slate-500'
-                }`}
-              >
-                {inputCharCount} / 8,000 characters
+      {/* TWO-PANEL EDITOR WORKSPACE */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-5 items-start">
+        
+        {/* ========================================================= */}
+        {/* LEFT PANEL: ORIGINAL TEXT EDITOR & COMPACT CONTROLS     */}
+        {/* ========================================================= */}
+        <div className="bg-white rounded-2xl border border-[#8E84E0]/25 shadow-card flex flex-col overflow-hidden min-w-0">
+          {/* Left Panel Header */}
+          <div className="bg-[#FAF9FF] px-4 py-2.5 border-b border-[#8E84E0]/15 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#6654F5]" />
+              <span className="text-xs font-bold uppercase tracking-wider text-[#15152B]">
+                Original Input
               </span>
             </div>
 
-            {inputText && (
+            <div className="flex items-center gap-2 text-xs text-[#6F7088]">
+              <span>{inputWordCount} words</span>
+              <span className="text-[#8E84E0]/30">·</span>
+              <span className={inputCharCount > 7500 ? 'text-amber-600 font-semibold' : ''}>
+                {inputCharCount}/8,000
+              </span>
+              {inputText && (
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  disabled={loading}
+                  className="ml-1 text-[#6F7088] hover:text-[#15152B] p-1 rounded hover:bg-[#F4F2FF] transition-colors"
+                  title="Clear original text"
+                >
+                  <Eraser className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Textarea Area */}
+          <div className="p-4 flex-1 flex flex-col">
+            <label htmlFor="humanize-input" className="sr-only">
+              Original text to humanize
+            </label>
+            <textarea
+              id="humanize-input"
+              rows={9}
+              value={inputText}
+              disabled={loading}
+              onChange={(e) => setInputText(e.target.value)}
+              placeholder="Paste robotic, rigid, or AI-generated text here (up to 8,000 characters)..."
+              className="w-full bg-transparent text-[#15152B] placeholder:text-[#9596AA] text-sm leading-relaxed focus:outline-none resize-y min-h-[190px]"
+            />
+          </div>
+
+          {/* Configuration Controls Bar */}
+          <div className="p-4 bg-[#FAF9FF]/80 border-t border-[#8E84E0]/15 space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
+              {/* Compact Context Dropdown */}
+              <ContextSelector value={context} onChange={setContext} disabled={loading} />
+
+              {/* Compact Tone Segmented Control */}
+              <ToneSelector value={tone} onChange={setTone} disabled={loading} />
+            </div>
+
+            {/* Collapsible Advanced Instructions */}
+            <div className="pt-1">
               <button
                 type="button"
-                onClick={handleClear}
-                disabled={loading}
-                className="text-slate-400 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded px-1.5 py-0.5 flex items-center gap-1 transition"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="flex items-center gap-1.5 text-xs font-semibold text-[#6F7088] hover:text-[#15152B] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#6654F5]"
               >
-                <Eraser className="w-3.5 h-3.5" />
-                <span>Clear text</span>
+                <SlidersHorizontal className="w-3 h-3 text-[#6654F5]" />
+                <span>Custom Instructions (Optional)</span>
+                {showAdvanced ? (
+                  <ChevronUp className="w-3 h-3 text-[#9596AA]" />
+                ) : (
+                  <ChevronDown className="w-3 h-3 text-[#9596AA]" />
+                )}
               </button>
-            )}
-          </div>
-        </div>
 
-        {/* Target Context Selector */}
-        <ContextSelector value={context} onChange={setContext} disabled={loading} />
-
-        {/* Target Tone Selector */}
-        <ToneSelector value={tone} onChange={setTone} disabled={loading} />
-
-        {/* Collapsible Advanced Guidance */}
-        <div className="pt-2 border-t border-slate-100">
-          <button
-            type="button"
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded px-1 py-0.5 transition"
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5 text-brand-600" />
-            <span>Additional Custom Instructions (Optional)</span>
-            {showAdvanced ? (
-              <ChevronUp className="w-3.5 h-3.5" />
-            ) : (
-              <ChevronDown className="w-3.5 h-3.5" />
-            )}
-          </button>
-
-          {showAdvanced && (
-            <div className="mt-3">
-              <label htmlFor="custom-instructions" className="sr-only">
-                Custom instructions
-              </label>
-              <input
-                id="custom-instructions"
-                type="text"
-                value={customInstructions}
-                onChange={(e) => setCustomInstructions(e.target.value)}
-                placeholder="e.g. Ensure bullet points are kept; keep tone particularly supportive."
-                className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white text-navy-900 placeholder:text-slate-400 transition"
-              />
+              {showAdvanced && (
+                <div className="mt-2 animate-fade-in">
+                  <input
+                    type="text"
+                    value={customInstructions}
+                    disabled={loading}
+                    onChange={(e) => setCustomInstructions(e.target.value)}
+                    placeholder="e.g. Keep bullet format; emphasize candidate empathy."
+                    className="w-full px-3 py-1.5 text-xs bg-white border border-[#8E84E0]/25 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#6654F5] text-[#15152B] placeholder:text-[#9596AA]"
+                  />
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Error Alert */}
-        {error && (
-          <div
-            role="alert"
-            className="p-4 bg-red-50/90 border border-red-200 rounded-xl flex items-start gap-3 text-xs text-red-800 shadow-xs"
-          >
-            <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
-            <div className="flex-1">
-              <strong className="font-semibold block text-red-900 mb-0.5">Execution Error</strong>
-              <p className="leading-relaxed">{error}</p>
+            {/* Error Message */}
+            {error && (
+              <div
+                role="alert"
+                className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2 text-xs text-rose-900 animate-fade-in"
+              >
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <span className="flex-1 leading-snug">{error}</span>
+              </div>
+            )}
+
+            {/* Primary Action Button */}
+            <div className="pt-2 flex items-center justify-between gap-3">
+              <div className="text-[11px] text-[#9596AA] hidden sm:block">
+                Truth Guard verified
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleHumanize()}
+                disabled={loading || !inputText.trim()}
+                className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-[#6654F5] via-[#7563FF] to-[#8A7CFF] hover:from-[#5542E5] hover:to-[#7869FF] text-white font-semibold text-xs sm:text-sm rounded-xl shadow-button-primary hover:shadow-[0_4px_16px_rgba(102,84,245,0.38)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6654F5] active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Humanizing text...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    <span>Humanize Text</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
-        )}
-
-        {/* Action Button */}
-        <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
-          <div className="text-[11px] text-slate-400 hidden sm:block">
-            Gemini 3.8 Flash + Dual Verification Engine
-          </div>
-          <button
-            type="button"
-            onClick={() => handleHumanize()}
-            disabled={loading || !inputText.trim()}
-            className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 active:from-brand-800 active:to-indigo-800 text-white font-semibold text-sm rounded-xl shadow-md hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin text-white" />
-                <span>Humanizing with Gemini & Guarding Truth...</span>
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4 text-white" />
-                <span>Humanize Text</span>
-              </>
-            )}
-          </button>
         </div>
+
+        {/* ========================================================= */}
+        {/* RIGHT PANEL: OUTPUT WORKSPACE & TRUTH GUARD AUDIT        */}
+        {/* ========================================================= */}
+        <div className="bg-white rounded-2xl border border-[#8E84E0]/25 shadow-card flex flex-col overflow-hidden min-w-0">
+          {/* Right Panel Header */}
+          <div className="bg-[#FAF9FF] px-4 py-2.5 border-b border-[#8E84E0]/15 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-3.5 h-3.5 text-[#6654F5]" />
+              <span className="text-xs font-bold uppercase tracking-wider text-[#15152B]">
+                Humanized Output
+              </span>
+            </div>
+
+            {/* Actions Bar if result exists */}
+            {result && (
+              <div className="flex items-center gap-1.5">
+                {/* Diff Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setShowDiff(!showDiff)}
+                  className={`px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 border transition-colors ${
+                    showDiff
+                      ? 'bg-[#EBE8FF] text-[#5542E5] border-[#6654F5]/30'
+                      : 'bg-white text-[#6F7088] border-[#8E84E0]/20 hover:text-[#15152B]'
+                  }`}
+                  title="Highlight differences"
+                >
+                  <Eye className="w-3 h-3 text-[#6654F5]" />
+                  <span className="hidden sm:inline">Diff</span>
+                </button>
+
+                {/* Save to History */}
+                <button
+                  type="button"
+                  onClick={handleSaveToHistory}
+                  disabled={saving || saveSuccess}
+                  className="px-2 py-1 rounded-md text-[11px] font-semibold bg-white text-[#6F7088] border border-[#8E84E0]/20 hover:text-[#15152B] flex items-center gap-1 transition-colors"
+                  title="Save rewrite to cloud history"
+                >
+                  {saving ? (
+                    <Loader2 className="w-3 h-3 animate-spin text-[#6654F5]" />
+                  ) : saveSuccess ? (
+                    <Check className="w-3 h-3 text-emerald-600" />
+                  ) : (
+                    <BookmarkPlus className="w-3 h-3 text-[#6654F5]" />
+                  )}
+                  <span className="hidden sm:inline">{saveSuccess ? 'Saved' : 'Save'}</span>
+                </button>
+
+                {/* Retry Button */}
+                <button
+                  type="button"
+                  onClick={() => handleHumanize()}
+                  disabled={loading}
+                  className="px-2 py-1 rounded-md text-[11px] font-semibold bg-white text-[#6F7088] border border-[#8E84E0]/20 hover:text-[#15152B] flex items-center gap-1 transition-colors"
+                  title="Generate another rewrite"
+                >
+                  <RotateCcw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+                  <span className="hidden sm:inline">Retry</span>
+                </button>
+
+                {/* Copy Button */}
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(result.humanizedText)}
+                  className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#6654F5] hover:bg-[#5542E5] text-white flex items-center gap-1 transition-colors shadow-2xs"
+                  title="Copy rewritten output to clipboard"
+                >
+                  {copiedOutput ? (
+                    <>
+                      <Check className="w-3 h-3 text-white" />
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3 h-3 text-white" />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Right Panel Main Body */}
+          <div className="p-4 flex-1 flex flex-col justify-between space-y-4 min-h-[300px]">
+            {/* Real Result Display */}
+            {result ? (
+              <div className="space-y-4">
+                {/* Text Output Box */}
+                <div className="p-4 rounded-xl bg-[#FAF9FF]/40 border border-[#8E84E0]/15 whitespace-pre-wrap text-sm text-[#15152B] leading-relaxed font-sans min-h-[180px]">
+                  {showDiff
+                    ? renderHighlightedDiff(result.originalText, result.humanizedText)
+                    : result.humanizedText}
+                </div>
+
+                {/* Word Stats Bar */}
+                <div className="flex items-center justify-between text-xs text-[#6F7088] px-1">
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center gap-1">
+                      <FileText className="w-3.5 h-3.5 text-[#6654F5]" />
+                      <strong>{result.stats.rewrittenWords}</strong> words
+                    </span>
+                    <span className="text-[#8E84E0]/30">·</span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-[#9596AA]" />
+                      ~{result.stats.readingTimeSeconds}s read
+                    </span>
+                  </div>
+
+                  {/* Flagged Issue Quick Banner & Safer Rewrite Action */}
+                  {hasIssues && (
+                    <button
+                      type="button"
+                      onClick={handleSaferRewrite}
+                      disabled={loading}
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-lg transition-colors"
+                    >
+                      <Sliders className="w-3 h-3" />
+                      <span>Try Safer Rewrite</span>
+                    </button>
+                  )}
+                </div>
+
+                {saveError && (
+                  <div className="p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900">
+                    {saveError}
+                  </div>
+                )}
+
+                {/* Compact Truth Guard Audit Component */}
+                <TruthGuardPanel
+                  truthGuard={result.truthGuard}
+                  loading={false}
+                />
+              </div>
+            ) : loading ? (
+              /* Loading State */
+              <div className="flex-1 flex flex-col items-center justify-center py-16 text-center space-y-3">
+                <Loader2 className="w-7 h-7 animate-spin text-[#6654F5]" />
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-[#15152B]">
+                    Refining words & analyzing cadence...
+                  </p>
+                  <p className="text-[11px] text-[#6F7088]">
+                    Gemini 3.8 Flash rewriting with active Truth Guard verification
+                  </p>
+                </div>
+              </div>
+            ) : (
+              /* Minimal Clean Empty State */
+              <div className="flex-1 flex flex-col items-center justify-center py-16 text-center space-y-2 border border-dashed border-[#8E84E0]/25 rounded-xl bg-[#FAF9FF]/40">
+                <Sparkles className="w-6 h-6 text-[#8E84E0]/60" />
+                <p className="text-xs font-semibold text-[#15152B]">
+                  Output will appear here
+                </p>
+                <p className="text-[11px] text-[#6F7088] max-w-xs">
+                  Enter or select a draft on the left, then click Humanize Text.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
       </div>
-
-      {/* Results Comparison & Truth Guard Section */}
-      {(result || loading) && (
-        <div className="space-y-6 animate-fade-in">
-          {result && (
-            <ResultsComparison
-              result={result}
-              onRetry={() => handleHumanize()}
-              onSaferRewrite={handleSaferRewrite}
-              onSaved={onSavedToHistory}
-              isRetrying={loading}
-            />
-          )}
-
-          <TruthGuardPanel
-            truthGuard={result?.truthGuard || null}
-            loading={loading && !result}
-          />
-        </div>
-      )}
     </div>
   );
 }
