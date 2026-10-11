@@ -2,14 +2,28 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/firebase/authContext';
 import AuthModal from './AuthModal';
-import { Sparkles, Shield, History, UserCheck, LogOut, ArrowRight, Menu, X, ArrowLeft } from 'lucide-react';
+import {
+  Sparkles,
+  Shield,
+  History,
+  UserCheck,
+  LogOut,
+  ArrowRight,
+  Menu,
+  X,
+  ArrowLeft,
+  PenLine,
+  SlidersHorizontal,
+  ScanSearch,
+} from 'lucide-react';
 
 interface HeaderProps {
   onToggleHistory?: () => void;
   showHistory?: boolean;
-  variant?: 'landing' | 'studio';
+  variant?: 'landing' | 'studio' | 'writer' | 'detector';
 }
 
 export default function Header({
@@ -17,6 +31,7 @@ export default function Header({
   showHistory = false,
   variant = 'landing',
 }: HeaderProps) {
+  const pathname = usePathname();
   const { user, signOut } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
@@ -36,6 +51,10 @@ export default function Header({
     setAuthModalOpen(true);
     setMobileMenuOpen(false);
   };
+
+  const isStudioActive = pathname === '/studio' || variant === 'studio';
+  const isWriterActive = pathname === '/writer' || variant === 'writer';
+  const isDetectorActive = pathname === '/ai-detector' || variant === 'detector';
 
   return (
     <>
@@ -65,7 +84,15 @@ export default function Header({
                   Humanize <span className="text-[#6654F5]">AI</span>
                 </span>
 
-                {variant === 'studio' ? (
+                {variant === 'detector' ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#EBE8FF] text-[#5542E5] border border-[#6654F5]/25">
+                    <ScanSearch className="w-3 h-3 text-[#6654F5]" /> AI Detector
+                  </span>
+                ) : variant === 'writer' ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#EBE8FF] text-[#5542E5] border border-[#6654F5]/25">
+                    <PenLine className="w-3 h-3 text-[#6654F5]" /> Writer
+                  </span>
+                ) : variant === 'studio' ? (
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#EBE8FF] text-[#5542E5] border border-[#6654F5]/25">
                     Studio
                   </span>
@@ -79,44 +106,120 @@ export default function Header({
             </Link>
           </div>
 
-          {/* Center Navigation: Shown only on Landing Page */}
+          {/* Center Navigation */}
           {variant === 'landing' ? (
             <nav className="hidden md:flex items-center gap-1 bg-white/70 backdrop-blur-md px-3 py-1 rounded-full border border-[#8E84E0]/20 shadow-subtle text-xs font-semibold text-[#6F7088]">
               <a
                 href="#features"
-                className="px-3.5 py-1.5 rounded-full hover:text-[#15152B] hover:bg-[#F4F2FF] transition-colors"
+                className="px-3 py-1.5 rounded-full hover:text-[#15152B] hover:bg-[#F4F2FF] transition-colors"
               >
                 Product
               </a>
               <a
                 href="#how-it-works"
-                className="px-3.5 py-1.5 rounded-full hover:text-[#15152B] hover:bg-[#F4F2FF] transition-colors"
+                className="px-3 py-1.5 rounded-full hover:text-[#15152B] hover:bg-[#F4F2FF] transition-colors"
               >
                 How It Works
               </a>
               <a
                 href="#truth-guard"
-                className="px-3.5 py-1.5 rounded-full hover:text-[#15152B] hover:bg-[#F4F2FF] transition-colors flex items-center gap-1"
+                className="px-3 py-1.5 rounded-full hover:text-[#15152B] hover:bg-[#F4F2FF] transition-colors flex items-center gap-1"
               >
                 <span>Truth Guard</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               </a>
+
+              <span className="w-px h-4 bg-[#8E84E0]/20 mx-1" />
+
+              <Link
+                href="/studio"
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-full transition-colors ${
+                  isStudioActive
+                    ? 'bg-[#EBE8FF] text-[#5542E5] border border-[#6654F5]/30'
+                    : 'hover:text-[#15152B] hover:bg-[#F4F2FF]'
+                }`}
+              >
+                <SlidersHorizontal className="w-3 h-3" />
+                <span>Studio</span>
+              </Link>
+
+              <Link
+                href="/writer"
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-full transition-colors ${
+                  isWriterActive
+                    ? 'bg-[#EBE8FF] text-[#5542E5] border border-[#6654F5]/30'
+                    : 'hover:text-[#15152B] hover:bg-[#F4F2FF]'
+                }`}
+              >
+                <PenLine className="w-3 h-3 text-[#6654F5]" />
+                <span>Writer</span>
+              </Link>
+
+              <Link
+                href="/ai-detector"
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-full transition-colors ${
+                  isDetectorActive
+                    ? 'bg-[#EBE8FF] text-[#5542E5] border border-[#6654F5]/30'
+                    : 'hover:text-[#15152B] hover:bg-[#F4F2FF]'
+                }`}
+              >
+                <ScanSearch className="w-3 h-3 text-[#6654F5]" />
+                <span>AI Detector</span>
+              </Link>
             </nav>
           ) : (
-            <div className="hidden sm:flex items-center gap-2 text-xs text-[#6F7088]">
+            <div className="hidden sm:flex items-center gap-1.5 bg-white/70 backdrop-blur-md px-2.5 py-1 rounded-full border border-[#8E84E0]/20 shadow-subtle text-xs font-semibold text-[#6F7088]">
               <Link
                 href="/"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:text-[#15152B] hover:bg-white/80 transition-colors border border-transparent hover:border-[#8E84E0]/20"
+                className="flex items-center gap-1 px-3 py-1 rounded-full hover:text-[#15152B] hover:bg-[#F4F2FF] transition-colors"
               >
-                <ArrowLeft className="w-3.5 h-3.5 text-[#6654F5]" />
-                <span>Back to Overview</span>
+                <ArrowLeft className="w-3 h-3 text-[#6654F5]" />
+                <span>Home</span>
+              </Link>
+
+              <span className="w-px h-4 bg-[#8E84E0]/20 mx-0.5" />
+
+              <Link
+                href="/studio"
+                className={`flex items-center gap-1 px-3 py-1 rounded-full transition-all ${
+                  isStudioActive
+                    ? 'bg-[#EBE8FF] text-[#5542E5] border border-[#6654F5]/30 shadow-2xs font-bold'
+                    : 'hover:text-[#15152B] hover:bg-[#F4F2FF]'
+                }`}
+              >
+                <SlidersHorizontal className="w-3 h-3" />
+                <span>Studio</span>
+              </Link>
+
+              <Link
+                href="/writer"
+                className={`flex items-center gap-1 px-3 py-1 rounded-full transition-all ${
+                  isWriterActive
+                    ? 'bg-[#EBE8FF] text-[#5542E5] border border-[#6654F5]/30 shadow-2xs font-bold'
+                    : 'hover:text-[#15152B] hover:bg-[#F4F2FF]'
+                }`}
+              >
+                <PenLine className="w-3 h-3 text-[#6654F5]" />
+                <span>Writer</span>
+              </Link>
+
+              <Link
+                href="/ai-detector"
+                className={`flex items-center gap-1 px-3 py-1 rounded-full transition-all ${
+                  isDetectorActive
+                    ? 'bg-[#EBE8FF] text-[#5542E5] border border-[#6654F5]/30 shadow-2xs font-bold'
+                    : 'hover:text-[#15152B] hover:bg-[#F4F2FF]'
+                }`}
+              >
+                <ScanSearch className="w-3 h-3 text-[#6654F5]" />
+                <span>AI Detector</span>
               </Link>
             </div>
           )}
 
           {/* Right Actions */}
           <div className="flex items-center gap-2.5">
-            {/* History drawer button (if in studio or authenticated) */}
+            {/* History drawer button (if in studio and authenticated) */}
             {user && onToggleHistory && (
               <button
                 type="button"
@@ -165,64 +268,114 @@ export default function Header({
               </div>
             )}
 
-            {/* Studio Call to Action / Try It Free */}
+            {/* Launch / CTA if on landing */}
             {variant === 'landing' ? (
               <Link
-                href="/studio"
+                href="/ai-detector"
                 className="group relative flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-[#6654F5] via-[#7563FF] to-[#8A7CFF] hover:from-[#5542E5] hover:to-[#7869FF] rounded-xl shadow-[0_2px_10px_rgba(102,84,245,0.28)] hover:shadow-[0_4px_16px_rgba(102,84,245,0.4)] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6654F5] focus-visible:ring-offset-2 active:scale-[0.98]"
               >
-                <span>Try It Free</span>
+                <span>AI Detector</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
               </Link>
             ) : (
               <div className="hidden lg:flex items-center gap-1.5 text-xs text-[#6F7088] bg-[#F4F2FF] border border-[#6654F5]/15 px-3 py-1.5 rounded-xl font-medium">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse-subtle" />
-                <span>Workspace Ready</span>
+                <span>Detector Ready</span>
               </div>
             )}
 
             {/* Mobile Hamburger Menu Toggle */}
-            {variant === 'landing' && (
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                aria-label="Toggle navigation menu"
-                className="md:hidden p-2 text-[#6F7088] hover:text-[#15152B] rounded-lg hover:bg-white/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6654F5]"
-              >
-                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle navigation menu"
+              className="sm:hidden p-2 text-[#6F7088] hover:text-[#15152B] rounded-lg hover:bg-white/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6654F5]"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
         </div>
 
         {/* Mobile Dropdown Menu */}
-        {variant === 'landing' && mobileMenuOpen && (
-          <div className="md:hidden px-4 pt-2 pb-4 border-t border-[#8E84E0]/15 bg-[#FAF9FF]/95 backdrop-blur-xl animate-fade-in space-y-3">
+        {mobileMenuOpen && (
+          <div className="sm:hidden px-4 pt-2 pb-4 border-t border-[#8E84E0]/15 bg-[#FAF9FF]/95 backdrop-blur-xl animate-fade-in space-y-3">
             <nav className="flex flex-col space-y-1 text-sm font-semibold text-[#6F7088]">
-              <a
-                href="#features"
+              {variant === 'landing' && (
+                <>
+                  <a
+                    href="#features"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="px-3 py-2 rounded-xl hover:bg-[#F4F2FF] hover:text-[#15152B] transition-colors"
+                  >
+                    Product
+                  </a>
+                  <a
+                    href="#how-it-works"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="px-3 py-2 rounded-xl hover:bg-[#F4F2FF] hover:text-[#15152B] transition-colors"
+                  >
+                    How It Works
+                  </a>
+                  <a
+                    href="#truth-guard"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="px-3 py-2 rounded-xl hover:bg-[#F4F2FF] hover:text-[#15152B] transition-colors flex items-center justify-between"
+                  >
+                    <span>Truth Guard</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                      Dual-Engine
+                    </span>
+                  </a>
+                </>
+              )}
+
+              <Link
+                href="/studio"
                 onClick={() => setMobileMenuOpen(false)}
-                className="px-3 py-2 rounded-xl hover:bg-[#F4F2FF] hover:text-[#15152B] transition-colors"
+                className={`flex items-center justify-between px-3 py-2 rounded-xl transition-colors ${
+                  isStudioActive
+                    ? 'bg-[#EBE8FF] text-[#5542E5] font-bold'
+                    : 'hover:bg-[#F4F2FF] hover:text-[#15152B]'
+                }`}
               >
-                Product
-              </a>
-              <a
-                href="#how-it-works"
-                onClick={() => setMobileMenuOpen(false)}
-                className="px-3 py-2 rounded-xl hover:bg-[#F4F2FF] hover:text-[#15152B] transition-colors"
-              >
-                How It Works
-              </a>
-              <a
-                href="#truth-guard"
-                onClick={() => setMobileMenuOpen(false)}
-                className="px-3 py-2 rounded-xl hover:bg-[#F4F2FF] hover:text-[#15152B] transition-colors flex items-center justify-between"
-              >
-                <span>Truth Guard</span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                  Dual-Engine
+                <span className="flex items-center gap-2">
+                  <SlidersHorizontal className="w-4 h-4" />
+                  <span>Writing Studio</span>
                 </span>
-              </a>
+                {isStudioActive && <span className="w-1.5 h-1.5 rounded-full bg-[#6654F5]" />}
+              </Link>
+
+              <Link
+                href="/writer"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center justify-between px-3 py-2 rounded-xl transition-colors ${
+                  isWriterActive
+                    ? 'bg-[#EBE8FF] text-[#5542E5] font-bold'
+                    : 'hover:bg-[#F4F2FF] hover:text-[#15152B]'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <PenLine className="w-4 h-4 text-[#6654F5]" />
+                  <span>Writer Workspace</span>
+                </span>
+                {isWriterActive && <span className="w-1.5 h-1.5 rounded-full bg-[#6654F5]" />}
+              </Link>
+
+              <Link
+                href="/ai-detector"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center justify-between px-3 py-2 rounded-xl transition-colors ${
+                  isDetectorActive
+                    ? 'bg-[#EBE8FF] text-[#5542E5] font-bold'
+                    : 'hover:bg-[#F4F2FF] hover:text-[#15152B]'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <ScanSearch className="w-4 h-4 text-[#6654F5]" />
+                  <span>AI Detector</span>
+                </span>
+                {isDetectorActive && <span className="w-1.5 h-1.5 rounded-full bg-[#6654F5]" />}
+              </Link>
             </nav>
 
             <div className="pt-2 border-t border-[#8E84E0]/15 flex items-center justify-between">
@@ -241,12 +394,12 @@ export default function Header({
               )}
 
               <Link
-                href="/studio"
+                href="/ai-detector"
                 onClick={() => setMobileMenuOpen(false)}
                 className="px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-[#6654F5] to-[#8A7CFF] rounded-xl shadow-button-primary flex items-center gap-1.5"
               >
-                <span>Open Studio</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ScanSearch className="w-3.5 h-3.5" />
+                <span>Open Detector</span>
               </Link>
             </div>
           </div>
